@@ -7,69 +7,7 @@ const MiloCostCalculator = () => {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
 
-  // Auth credentials
-  const AUTH_USERNAME = 'miloadmin';
-  const AUTH_PASSWORD = 'skinacat';
-
-  const handleLogin = () => {
-    if (username === AUTH_USERNAME && password === AUTH_PASSWORD) {
-      setIsAuthenticated(true);
-      setAuthError('');
-    } else {
-      setAuthError('Invalid username or password');
-    }
-  };
-
-  // Login screen
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="bg-slate-800 p-8 rounded-xl max-w-sm w-full border border-slate-700">
-          <h1 className="text-2xl font-bold text-white mb-2">Kodiak Cost Calculator</h1>
-          <p className="text-slate-400 mb-6">Please sign in to continue</p>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-              />
-            </div>
-            
-            {authError && (
-              <p className="text-red-400 text-sm">{authError}</p>
-            )}
-            
-            <button
-              onClick={handleLogin}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              Sign In
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Volume inputs
+  // Volume inputs - MUST be before any conditional returns
   const [weeklyHires, setWeeklyHires] = useState(150);
   const [supportHoursPerMonth, setSupportHoursPerMonth] = useState(6);
   
@@ -87,6 +25,19 @@ const MiloCostCalculator = () => {
   const [infraTier, setInfraTier] = useState('standard'); // 'minimal', 'standard', 'production'
 
   const LABOR_RATE = 20; // $/hr
+
+  // Auth credentials
+  const AUTH_USERNAME = 'miloadmin';
+  const AUTH_PASSWORD = 'skinacat';
+
+  const handleLogin = () => {
+    if (username === AUTH_USERNAME && password === AUTH_PASSWORD) {
+      setIsAuthenticated(true);
+      setAuthError('');
+    } else {
+      setAuthError('Invalid username or password');
+    }
+  };
 
   const calculations = useMemo(() => {
     const monthlyHires = Math.round(weeklyHires * 4.33);
@@ -318,6 +269,55 @@ const MiloCostCalculator = () => {
       maximumFractionDigits: decimals 
     }).format(value);
   };
+
+  // Login screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="bg-slate-800 p-8 rounded-xl max-w-sm w-full border border-slate-700">
+          <h1 className="text-2xl font-bold text-white mb-2">Kodiak Cost Calculator</h1>
+          <p className="text-slate-400 mb-6">Please sign in to continue</p>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter username"
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+              />
+            </div>
+            
+            {authError && (
+              <p className="text-red-400 text-sm">{authError}</p>
+            )}
+            
+            <button
+              onClick={handleLogin}
+              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 p-6">
