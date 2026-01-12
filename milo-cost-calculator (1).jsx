@@ -1,13 +1,7 @@
 import React, { useState, useMemo } from 'react';
 
 const MiloCostCalculator = () => {
-  // Authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [authError, setAuthError] = useState('');
-
-  // Volume inputs - MUST be before any conditional returns
+  // Volume inputs
   const [weeklyHires, setWeeklyHires] = useState(150);
   const [supportHoursPerMonth, setSupportHoursPerMonth] = useState(6);
   
@@ -18,30 +12,13 @@ const MiloCostCalculator = () => {
     riskScoring: true,
     i9Command: true,
     batchMode: false,
-    slackTeams: true,
-    idVerify: false
+    slackTeams: true
   });
-
-  // ID Verification provider choice
-  const [idVerifyProvider, setIdVerifyProvider] = useState('persona'); // 'persona', 'jumio', 'onfido', 'veriff'
 
   // Infrastructure choice
   const [infraTier, setInfraTier] = useState('standard'); // 'minimal', 'standard', 'production'
 
   const LABOR_RATE = 20; // $/hr
-
-  // Auth credentials
-  const AUTH_USERNAME = 'miloadmin';
-  const AUTH_PASSWORD = 'skinacat';
-
-  const handleLogin = () => {
-    if (username === AUTH_USERNAME && password === AUTH_PASSWORD) {
-      setIsAuthenticated(true);
-      setAuthError('');
-    } else {
-      setAuthError('Invalid username or password');
-    }
-  };
 
   const calculations = useMemo(() => {
     const monthlyHires = Math.round(weeklyHires * 4.33);
@@ -223,36 +200,6 @@ const MiloCostCalculator = () => {
       };
     }
 
-    // ID Verification
-    if (accelerators.idVerify) {
-      // Provider pricing per verification (corrected Jan 2026 rates)
-      // Note: Persona only charges for successful verifications, not failed attempts
-      const idVerifyRates = {
-        persona: { rate: 0.50, name: 'Persona', desc: 'Lowest cost, success-only billing' },
-        veriff: { rate: 1.39, name: 'Veriff (Plus)', desc: 'Transparent self-serve pricing' },
-        onfido: { rate: 2.00, name: 'Onfido', desc: 'Enterprise, custom quotes' },
-        jumio: { rate: 2.00, name: 'Jumio', desc: 'Enterprise, custom quotes' }
-      };
-      const selectedProvider = idVerifyRates[idVerifyProvider];
-      const verificationRate = monthlyHires * 0.85; // 85% of hires need ID verification
-      const verificationsNeeded = Math.round(monthlyHires * verificationRate / monthlyHires);
-      const idVerifyCost = verificationsNeeded * selectedProvider.rate;
-      // Platform fee (monthly minimum) - enterprise providers have minimums
-      const platformFee = idVerifyProvider === 'jumio' ? 500 : idVerifyProvider === 'onfido' ? 500 : 0;
-      // Webhook/integration overhead
-      const integrationCost = 2;
-      
-      acceleratorCosts.idVerify = {
-        name: `ID Verification (${selectedProvider.name})`,
-        breakdown: {
-          [`Verifications (${verificationsNeeded} × $${selectedProvider.rate.toFixed(2)})`]: idVerifyCost,
-          'Platform Fee': platformFee,
-          'Integration Overhead': integrationCost
-        },
-        total: idVerifyCost + platformFee + integrationCost
-      };
-    }
-
     const totalAcceleratorCost = Object.values(acceleratorCosts).reduce((acc, a) => acc + a.total, 0);
 
     // =========================================================================
@@ -292,7 +239,7 @@ const MiloCostCalculator = () => {
       totalAnnualCost,
       costPerHire
     };
-  }, [weeklyHires, supportHoursPerMonth, accelerators, infraTier, idVerifyProvider]);
+  }, [weeklyHires, supportHoursPerMonth, accelerators, infraTier]);
 
   const formatCurrency = (value, decimals = 2) => {
     if (value < 0.01 && value > 0) return '<$0.01';
@@ -303,55 +250,6 @@ const MiloCostCalculator = () => {
       maximumFractionDigits: decimals 
     }).format(value);
   };
-
-  // Login screen
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="bg-slate-800 p-8 rounded-xl max-w-sm w-full border border-slate-700">
-          <h1 className="text-2xl font-bold text-white mb-2">Kodiak Cost Calculator</h1>
-          <p className="text-slate-400 mb-6">Please sign in to continue</p>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-              />
-            </div>
-            
-            {authError && (
-              <p className="text-red-400 text-sm">{authError}</p>
-            )}
-            
-            <button
-              onClick={handleLogin}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              Sign In
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 p-6">
@@ -430,8 +328,7 @@ const MiloCostCalculator = () => {
                   { key: 'riskScoring', name: 'Risk Scoring' },
                   { key: 'i9Command', name: 'I-9 Command Center' },
                   { key: 'batchMode', name: 'Batch Mode' },
-                  { key: 'slackTeams', name: 'Slack/Teams' },
-                  { key: 'idVerify', name: 'ID Verification' }
+                  { key: 'slackTeams', name: 'Slack/Teams' }
                 ].map(acc => (
                   <label
                     key={acc.key}
@@ -451,37 +348,6 @@ const MiloCostCalculator = () => {
                   </label>
                 ))}
               </div>
-              
-              {/* ID Verification Provider Selection */}
-              {accelerators.idVerify && (
-                <div className="mt-4 pt-4 border-t border-slate-700">
-                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">ID Verify Provider</h3>
-                  <div className="space-y-1">
-                    {[
-                      { key: 'persona', name: 'Persona', price: '$0.50', desc: 'Lowest cost, success-only' },
-                      { key: 'veriff', name: 'Veriff (Plus)', price: '$1.39', desc: 'Transparent pricing' },
-                      { key: 'onfido', name: 'Onfido', price: '~$2.00', desc: 'Enterprise, custom quotes' },
-                      { key: 'jumio', name: 'Jumio', price: '~$2.00', desc: 'Enterprise, custom quotes' }
-                    ].map(provider => (
-                      <button
-                        key={provider.key}
-                        onClick={() => setIdVerifyProvider(provider.key)}
-                        className={`w-full p-2 rounded-lg text-left text-sm transition-all ${
-                          idVerifyProvider === provider.key
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                        }`}
-                      >
-                        <div className="flex justify-between">
-                          <span className="font-medium">{provider.name}</span>
-                          <span className="opacity-75">{provider.price}/verify</span>
-                        </div>
-                        <div className="text-xs opacity-60">{provider.desc}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -621,10 +487,6 @@ const MiloCostCalculator = () => {
                 <div>
                   <div className="text-slate-500">ML Inference</div>
                   <div className="text-slate-300">Lambda + sklearn (near-free)</div>
-                </div>
-                <div>
-                  <div className="text-slate-500">ID Verification</div>
-                  <div className="text-slate-300">Persona ($0.50) / Veriff ($1.39) / Onfido (~$2) / Jumio (~$2)</div>
                 </div>
               </div>
             </div>
